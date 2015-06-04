@@ -1,0 +1,37 @@
+{% extends "completeme/base.html" %}
+{% load admin_list admin_modify i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <h1>Test Parser file</h1>
+  <div class="load">
+    <p>load at 12, 14</p>
+    {% load "" %}
+  </div>
+  <div class="block">
+    <p>block at 16, 14</p>
+    {% block  %}
+    {% endblock  %}
+  </div>
+  <div class="tag">
+    <p>tag at 21, 8</p>
+    {%   %}
+  </div>
+  <div class="filter">
+    <p>filter at 25, 16</p>
+    {% varname|  %}
+  </div>
+  <div class="url">
+    <p>url at 29, 12</p>
+    {% url "" %}
+  </div>
+  <div class="static">
+    <p>static at 33, 16</p>
+    {% static "" %}
+  </div>
+</body>
+</html>
