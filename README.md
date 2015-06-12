@@ -6,20 +6,59 @@ have the django python code running inside it.
 
 https://github.com/mjbrownie/vim-htmldjango_omnicomplete
 
-So in theory it should be able to be converted into python3 based projects as
-well as be generally a lot easier to debug and less likely to have instability
-issues within your editor.
+An omnicomplete tailored to django templates "tags/variables/filters/templates"
 
-I am hoping to write a youcompleteme or standalone plugin so it can be used in
-other editors if it is wanted.
+Screenshots:
 
-INSTALLED_APPS 'completeme'
+    block: https://github.com/mjbrownie/vim-htmldjango_omnicomplete/raw/master/examples/block_eample.png
+    url: https://github.com/mjbrownie/vim-htmldjango_omnicomplete/raw/master/examples/url_example.png
+    extends: https://github.com/mjbrownie/vim-htmldjango_omnicomplete/blob/master/examples/extends_example.png
 
-## TODO LIST
+Eg.
 
-The current code is non functioning (although you can check out the tests to
-see where I'm going)
+    1. Filters
 
-* rewrite the template inspection (doneish completeme/parser.py)
-* write context regexp matching
-* write a yocompleteme completer script or light omnicomplete client
+        {{ somevar|a<c-x><c-o>}} should complete 'add' , 'addslashes'
+
+    2. Tags
+
+        {% cy<c-x><x-o> %} should complete 'cycle'
+
+    3. Load statements
+
+        It also should grab any libs you have {% load tag_lib %} in the file.
+        Although it needs them in INSTALLED_APPS.
+
+        {% load <c-x><c-o> %} will complete libraries (eg. 'cache', 'humanize')
+
+    4. template filenames
+
+        {% extends '<c-x><c-o>' %} will list base.html ... etc
+
+    5. url complete
+
+        {% url <c-x><c-o> %} should complete views and named urls
+
+    6. super block complete
+
+        eg {% block c<c-x><c-o> %} to complete 'content' or something defined
+        in an extended template.
+
+    7. static files complete
+
+        eg {% static "r<c-x><c-o>" %}
+
+        <script src="{% static "<c-x><c-o>" %}" /> - completes js files in static
+        <style src="{% static "<c-x><c-o>" %}" /> - completes css files in static
+        <img src="{% static "<c-x><c-o>" %}" /> - completes img files in static
+
+    8. optional variable name completion (placeholder)
+
+        {{ s<c-x><x-o> }}
+
+        will complete any maps defined in the python htmldjango_opts['variable']
+        dict list. See below for info.
+
+
+    Where possible info panels show the functions __doc__. Most of the
+    internal ones are decent.
