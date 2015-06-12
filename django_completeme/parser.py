@@ -289,6 +289,9 @@ class TemplateInspector(object):
     def get_line(self):
         return self.buff[self.lineno -1]
 
+    def in_django_tag(self):
+        lp = LineParser(self.get_line(), self.colno)
+        return lp.in_a_tag() or lp.in_a_var_tag()
 
 
 class LineParser(object):
