@@ -3,6 +3,37 @@ competion Template Inspector
 """
 import re
 import os
+import os.path
+import sys
+
+if 'VIRTUAL_ENV' in os.environ:
+    project_base_dir = os.environ['VIRTUAL_ENV']
+    sys.path.insert(0, project_base_dir)
+    activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
+    execfile(activate_this, dict(__file__=activate_this))
+
+#Old school project assumptions. Note This assumes pwd is project dir
+if os.path.exists('settings.py'):
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+else:
+    #look for django 1.4 style settings eg /<project>/<project>/settings.py
+    #created by a django_admin.py startproject
+    cur_dir = os.path.join(os.getcwd().split('/').pop())
+    if os.path.exists(os.path.join(cur_dir,'settings.py')):
+        os.environ['DJANGO_SETTINGS_MODULE'] = '%s.settings' % cur_dir
+    else:
+        #Your on your own. Set to fail loudly
+        os.environ['DJANGO_SETTINGS_MODULE'] = ''
+
+if os.environ.get('DJANGO_CONFIGURATION'):
+    import configurations.importer
+    configurations.importer.install()
+
+# Setup Django (required for >= 1.7).
+import django
+if hasattr(django, 'setup'):
+    django.setup()
+
 from django.template import Template
 from django.template.loader_tags import ExtendsNode, BlockNode
 from django.template.loader import get_template
@@ -33,9 +64,12 @@ class TemplateInspector(object):
     buff = None
     pattern = ""
 
-    def __init__(self, filename, lineno=1, colno=0):
+    def __init__(self, filename, lineno=1, colno=0, buff=None):
         self.filename, self.lineno, self.colno = filename, lineno, colno
         self.load_template(filename)
+
+        if buff:
+            self.buff = buff
 
         self.pattern = ""  # TODO pattern is determined via leader
 
