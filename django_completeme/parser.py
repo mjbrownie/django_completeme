@@ -5,6 +5,7 @@ import re
 import os
 import os.path
 import sys
+import logging
 
 if 'VIRTUAL_ENV' in os.environ:
     project_base_dir = os.environ['VIRTUAL_ENV']
@@ -24,6 +25,8 @@ else:
     else:
         #Your on your own. Set to fail loudly
         os.environ['DJANGO_SETTINGS_MODULE'] = ''
+
+sys.path.insert(0,os.getcwd())
 
 if os.environ.get('DJANGO_CONFIGURATION'):
     import configurations.importer
@@ -69,7 +72,7 @@ class TemplateInspector(object):
         self.load_template(filename)
 
         if buff:
-            self.buff = buff
+            self.buff = buff.split('\n')
 
         self.pattern = ""  # TODO pattern is determined via leader
 
@@ -80,7 +83,7 @@ class TemplateInspector(object):
         """
 
         def _get_doc(doc, name):
-            """ get doc cleans __doc__ info in the vim window at top """
+            """ get doc cleans __doc__ extra_menu_info in the vim window at top """
             if doc:
                 return doc.replace('"', ' ').replace("'", ' ')
             return '%s: no doc' % name
@@ -88,8 +91,8 @@ class TemplateInspector(object):
         def _get_opt_dict(lib, tpl, libname=''):
             """ not sure what this does"""
             opts = getattr(lib, tpl)
-            return [{'word': myfile, 'info': _get_doc(opts[myfile].__doc__, myfile),
-                     'menu':libname} for myfile in opts.keys()]
+            return [{'insertion_text': myfile, 'extra_menu_info': _get_doc(opts[myfile].__doc__, myfile),
+                     'menu_text':libname} for myfile in opts.keys()]
 
         matches = []
 
@@ -113,7 +116,7 @@ class TemplateInspector(object):
         for module in get_templatetags_modules():
             mod = __import__(module, fromlist=['foo'])
             for _, match, _ in pkgutil.iter_modules([os.path.dirname(mod.__file__)]):
-                opts.append({'word':match, 'menu':mod.__name__})
+                opts.append({'insertion_text':match, 'menu_text':match , 'extra_menu_info': mod.__name__})
 
         return opts
 
@@ -146,7 +149,7 @@ class TemplateInspector(object):
             for path, _ in finder.list([]):
                 if re.compile(ext, re.IGNORECASE).match(path) \
                         and path.startswith(self.pattern):
-                    matches.append(dict(word=path, info=''))
+                    matches.append(dict(insertion_text=path, extra_menu_info=''))
 
         return matches
 
@@ -166,14 +169,14 @@ class TemplateInspector(object):
                             _, ext = os.path.splitext(myfile)
                             if ext in TEMPLATE_EXTS:
                                 matches.append({
-                                    'word': os.path.join(root, myfile).replace(
+                                    'insertion_text': os.path.join(root, myfile).replace(
                                         mydir, ''),
-                                    'info': 'found in %s' % mydir
+                                    'extra_menu_info': 'found in %s' % mydir
                                 })
                 else:
                     matches.append({
-                        'word': match.replace(mydir, ''),
-                        'info': 'found in %s' % mydir
+                        'insertion_text': match.replace(mydir, ''),
+                        'extra_menu_info': 'found in %s' % mydir
                     })
         return matches
 
@@ -228,7 +231,7 @@ class TemplateInspector(object):
 
         matches = _get_blocks(base)
 
-        return [{'word': name, 'menu': match} for _, name, match in matches if name.startswith(self.pattern)]
+        return [{'insertion_text': name, 'menu_text': match} for _, name, match in matches if name.startswith(self.pattern)]
 
     def _urls(self):
         """
@@ -244,9 +247,9 @@ class TemplateInspector(object):
             for entry in urllist:
                 if hasattr(entry, 'name') and entry.name:
                     matches.append(dict(
-                        word=entry.name,
-                        info=entry.regex.pattern,
-                        menu=parent and parent.urlconf_name or '')
+                        insertion_text=entry.name,
+                        extra_menu_info=entry.regex.pattern,
+                        menu_text=parent and parent.urlconf_name or '')
                     )
                 if hasattr(entry, 'url_patterns'):
                     get_urls(entry.url_patterns, entry)
@@ -267,10 +270,14 @@ class TemplateInspector(object):
     def completions(self, lineno=None, colno=None):
         """ return completion dict """
         self.lineno, self.colno = lineno or self.lineno, colno or self.colno
+
+
         func = LineParser(self.get_line(), self.colno).get_type()
 
         if func:
-            return getattr(self,func)()
+            comps =  getattr(self,func)()
+            logging.info("returning: %s" % comps)
+            return comps
         return []
 
     def load_template(self, filename):
@@ -280,10 +287,7 @@ class TemplateInspector(object):
         self.line = self.buff[self.lineno]
 
     def get_line(self):
-        try:
-            return self.buff[self.lineno]
-        except IndexError:
-            return ''
+        return self.buff[self.lineno -1]
 
 
 
