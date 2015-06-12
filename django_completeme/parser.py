@@ -1,7 +1,8 @@
 """
 competion Template Inspector
 """
-import re, os
+import re
+import os
 from django.template import Template
 from django.template.loader_tags import ExtendsNode, BlockNode
 from django.template.loader import get_template
@@ -11,12 +12,14 @@ import pkgutil
 from django.conf import settings as mysettings
 from django.contrib.staticfiles import finders
 
-from completeme.compat import app_template_dirs, \
-        get_templatetags_modules, get_library, import_library
+from django_completeme.compat import app_template_dirs, \
+    get_templatetags_modules, get_library, import_library
 
-TEMPLATE_EXTS = ['.html','.txt','.htm', '.haml']
+TEMPLATE_EXTS = ['.html', '.txt', '.htm', '.haml']
+
 
 class TemplateInspector(object):
+
     """
     The inspector object will take a template file, determine the type of
     completion_type needed and return the completion options.
@@ -34,10 +37,9 @@ class TemplateInspector(object):
         self.filename, self.lineno, self.colno = filename, lineno, colno
         self.load_template(filename)
 
-        self.pattern = "" #TODO pattern is determined via leader
+        self.pattern = ""  # TODO pattern is determined via leader
 
     def _tags_or_filters(self, tagtype):
-
         """
         TODO This is a pretty messy import from the original omnicomplete
         plugin
@@ -52,8 +54,8 @@ class TemplateInspector(object):
         def _get_opt_dict(lib, tpl, libname=''):
             """ not sure what this does"""
             opts = getattr(lib, tpl)
-            return [{'word':myfile, 'info': _get_doc(opts[myfile].__doc__, myfile),
-            'menu':libname} for myfile in opts.keys()]
+            return [{'word': myfile, 'info': _get_doc(opts[myfile].__doc__, myfile),
+                     'menu':libname} for myfile in opts.keys()]
 
         matches = []
 
@@ -68,6 +70,18 @@ class TemplateInspector(object):
         matches += _get_opt_dict(defaultlib, tagtype, 'default')
 
         return matches
+
+    def _loads(self):
+        """
+        matches for {% load %}
+        """
+        opts = []
+        for module in get_templatetags_modules():
+            mod = __import__(module, fromlist=['foo'])
+            for _, match, _ in pkgutil.iter_modules([os.path.dirname(mod.__file__)]):
+                opts.append({'word':match, 'menu':mod.__name__})
+
+        return opts
 
     def _tags(self):
         """ matching any completions {% <here> %}"""
@@ -97,7 +111,7 @@ class TemplateInspector(object):
         for finder in finders.get_finders():
             for path, _ in finder.list([]):
                 if re.compile(ext, re.IGNORECASE).match(path) \
-                    and path.startswith(self.pattern):
+                        and path.startswith(self.pattern):
                     matches.append(dict(word=path, info=''))
 
         return matches
@@ -118,14 +132,14 @@ class TemplateInspector(object):
                             _, ext = os.path.splitext(myfile)
                             if ext in TEMPLATE_EXTS:
                                 matches.append({
-                                    'word' : os.path.join(root, myfile).replace(
+                                    'word': os.path.join(root, myfile).replace(
                                         mydir, ''),
-                                    'info' : 'found in %s' % mydir
+                                    'info': 'found in %s' % mydir
                                 })
                 else:
                     matches.append({
-                        'word' : match.replace(mydir, ''),
-                        'info' : 'found in %s' % mydir
+                        'word': match.replace(mydir, ''),
+                        'info': 'found in %s' % mydir
                     })
         return matches
 
@@ -134,12 +148,12 @@ class TemplateInspector(object):
         matching any completions {% block <here> %}
         """
 
-        #use regexp for extends as get_template will fail on tag errors
+        # use regexp for extends as get_template will fail on tag errors
         rexp = re.compile(r'{%\s*extends\s*[\'"](.*)["\']\s*%}')
         base = None
-        templates = [] # for cycle detection
+        templates = []  # for cycle detection
 
-        #look for {% extends %} in the first 10 lines
+        # look for {% extends %} in the first 10 lines
         for line in self.buff[0:10]:
             match = rexp.match(line)
             if match:
@@ -147,7 +161,6 @@ class TemplateInspector(object):
                     base = get_template(match.groups()[0])
                 except Exception as e:
                     return []
-
 
         if not base:
             return []
@@ -157,9 +170,9 @@ class TemplateInspector(object):
             recursive worker function
             """
 
-            #TODO I Think this is a 1.8 compatibility thing sending the wrapper
+            # TODO I Think this is a 1.8 compatibility thing sending the wrapper
             # class
-            tpl = getattr(tpl,'name', None) and tpl or tpl.template
+            tpl = getattr(tpl, 'name', None) and tpl or tpl.template
 
             if tpl.name in templates and isinstance(tpl, Template):
                 print "cyclic extends detected!"
@@ -167,40 +180,40 @@ class TemplateInspector(object):
             else:
                 templates.append(tpl.name)
 
-            blocks = [(block, block.name, menu_prefix + tpl.name) \
-                for block in tpl.nodelist if isinstance(block, BlockNode)]
+            blocks = [(block, block.name, menu_prefix + tpl.name)
+                      for block in tpl.nodelist if isinstance(block, BlockNode)]
 
             for block, _, name in blocks:
                 blocks += _get_blocks(block, '%s%s > ' % (menu_prefix, name))
 
             if len(tpl.nodelist) > 0 and isinstance(tpl.nodelist[0], ExtendsNode):
-                blocks += _get_blocks(get_template(tpl.nodelist[0].parent_name))
+                blocks += _get_blocks(
+                    get_template(tpl.nodelist[0].parent_name))
 
             return blocks
 
         matches = _get_blocks(base)
 
-
-        return [{'word':name, 'menu':match} for _, name, match in matches if name.startswith(self.pattern)]
+        return [{'word': name, 'menu': match} for _, name, match in matches if name.startswith(self.pattern)]
 
     def _urls(self):
         """
         matching any completions {% url '<here>' %}
         """
         matches = []
-        try: #TODO not sure why this is here
-            urls = __import__(mysettings.ROOT_URLCONF,fromlist=['foo'])
+        try:  # TODO not sure why this is here
+            urls = __import__(mysettings.ROOT_URLCONF, fromlist=['foo'])
         except:
             return []
 
-        def get_urls(urllist,parent=None):
+        def get_urls(urllist, parent=None):
             for entry in urllist:
-                if hasattr(entry,'name') and entry.name:
+                if hasattr(entry, 'name') and entry.name:
                     matches.append(dict(
-                        word = entry.name,
-                        info = entry.regex.pattern,
-                        menu = parent and parent.urlconf_name or '')
-                        )
+                        word=entry.name,
+                        info=entry.regex.pattern,
+                        menu=parent and parent.urlconf_name or '')
+                    )
                 if hasattr(entry, 'url_patterns'):
                     get_urls(entry.url_patterns, entry)
         get_urls(urls.urlpatterns)
@@ -217,20 +230,110 @@ class TemplateInspector(object):
         """
         return []
 
-    def _find_completion_type(self):
-        """
-        TODO checks the buffer and returns what type of completion is needed
-        """
-        pass
-
     def completions(self, lineno=None, colno=None):
         """ return completion dict """
         self.lineno, self.colno = lineno or self.lineno, colno or self.colno
-        func = self._find_completion_type()
-        return func()
+        func = LineParser(self.get_line(), self.colno).get_type()
+
+        if func:
+            return getattr(self,func)()
+        return []
 
     def load_template(self, filename):
         """ Load a new template """
         self.filename = filename
         self.buff = open(filename, 'r').readlines()
         self.line = self.buff[self.lineno]
+
+    def get_line(self):
+        try:
+            return self.buff[self.lineno]
+        except IndexError:
+            return ''
+
+
+
+class LineParser(object):
+
+    """
+    The Line parser regexp matches the current line to determine the
+    appropriate completion type
+    """
+    # matching variable {{ matches }}
+    bvarexp = re.compile(r'.*{{([^}]*)$')
+    avarexp = re.compile(r'^([^{]*)}}.*')
+
+    # matching tag {% matches %}
+    btagexp = re.compile(r'.*{% *([a-zA-Z]*)([^}]*)$')
+    atagexp = re.compile(r'^([^{]*)%}.*')
+
+    # checking for {{ filter|bars }} in before
+    filterexp = re.compile(r'.*\|([\w]*)$')
+
+    def __init__(self, line, colno):
+        self.before, self.after = line[:colno], line[colno:]
+
+    def in_a_var_tag(self):
+        return (self.bvarexp.match(self.before) and
+                self.avarexp.match(self.after)) and True or False
+
+    def in_a_tag(self):
+        return (self.btagexp.match(self.before) and
+                self.atagexp.match(self.after)) and True or False
+
+    def is_variable(self):
+        """ variables cant be confused with filters """
+        return self.in_a_var_tag() and not self.filterexp.match(self.before)
+    is_variable.value = '_variables'
+
+    def is_filter(self):
+        """ variables cant be confused with filters """
+        return (self.in_a_var_tag() and
+                self.filterexp.match(self.before)) and True or False
+    is_filter.value = '_filters'
+
+    def is_load(self):
+        if self.in_a_tag():
+            match = self.btagexp.match(self.before)
+            return match.groups()[0] == 'load'
+    is_load.value = '_loads'
+
+    def is_staticfile(self):
+        if self.in_a_tag():
+            match = self.btagexp.match(self.before)
+            return match.groups()[0] == 'static'
+    is_staticfile.value = '_staticfiles'
+
+    def is_template(self):
+        if self.in_a_tag():
+            match = self.btagexp.match(self.before)
+            return match.groups()[0] in ('extends', 'include')
+    is_template.value = '_templates'
+
+    def is_tag(self):
+        """ returns basic tag match
+        """
+        if self.in_a_tag():
+            match = self.btagexp.match(self.before)
+            # TODO perhaps should be not in ('load', 'url', ....)
+            return match.groups()[0] == ''
+    is_tag.value = '_tags'
+
+    def is_url(self):
+        if self.in_a_tag():
+            match = self.btagexp.match(self.before)
+            return match.groups()[0] == 'url'
+    is_url.value = '_urls'
+
+    def is_block(self):
+        if self.in_a_tag():
+            match = self.btagexp.match(self.before)
+            return match.groups()[0] == 'block'
+    is_block.value = '_blocks'
+
+    def get_type(self):
+        for func in [f for f in dir(self) if  'is_' in f]:
+            if getattr(self, func)():
+                return getattr(self, func).value
+
+        return None
