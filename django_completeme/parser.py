@@ -15,22 +15,23 @@ if 'VIRTUAL_ENV' in os.environ:
     activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
     execfile(activate_this, dict(__file__=activate_this))
 
-#Old school project assumptions. Note This assumes pwd is project dir
+# Old school project assumptions. Note This assumes pwd is project dir
 if os.path.exists('settings.py'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 else:
-    #look for django 1.4 style settings eg /<project>/<project>/settings.py
-    #created by a django_admin.py startproject
+    # look for django 1.4 style settings eg /<project>/<project>/settings.py
+    # created by a django_admin.py startproject
     cur_dir = os.path.join(os.getcwd().split('/').pop())
-    if os.path.exists(os.path.join(cur_dir,'settings.py')):
+    if os.path.exists(os.path.join(cur_dir, 'settings.py')):
         os.environ['DJANGO_SETTINGS_MODULE'] = '%s.settings' % cur_dir
     else:
         pass
 
 
-logging.info("htmldjango: settings_module=%s" % os.environ['DJANGO_SETTINGS_MODULE'])
+logging.info("htmldjango: settings_module=%s" %
+             os.environ['DJANGO_SETTINGS_MODULE'])
 
-sys.path.insert(0,os.getcwd())
+sys.path.insert(0, os.getcwd())
 
 if os.environ.get('DJANGO_CONFIGURATION'):
     import configurations.importer
@@ -46,7 +47,7 @@ logging.debug("htmldjango: config_complete")
 
 from django.template import Template, TemplateDoesNotExist
 
-from django.template.loader import get_template #before loader_tags!
+from django.template.loader import get_template  # before loader_tags!
 from django.template.loader_tags import ExtendsNode, BlockNode
 from operator import itemgetter
 from glob import glob
@@ -62,6 +63,7 @@ from django_completeme.compat import app_template_dirs, \
 TEMPLATE_EXTS = ['.html', '.txt', '.htm', '.haml']
 
 logging.debug("htmldjango: import complete")
+
 
 class TemplateInspector(object):
 
@@ -104,8 +106,8 @@ class TemplateInspector(object):
         def _get_opt_dict(lib, tpl, libname=''):
             """ not sure what this does"""
             opts = getattr(lib, tpl)
-            return [{'insertion_text': myfile, 'extra_menu_info': _get_doc(opts[myfile].__doc__, myfile),
-                     'menu_text':libname} for myfile in opts.keys()]
+            return [{'insertion_text': myfile, 'detailed_info': _get_doc(opts[myfile].__doc__, myfile),
+                     'menu_text':myfile, 'extra_menu_info': libname} for myfile in opts.keys()]
 
         matches = []
 
@@ -129,7 +131,8 @@ class TemplateInspector(object):
         for module in get_templatetags_modules():
             mod = __import__(module, fromlist=['foo'])
             for _, match, _ in pkgutil.iter_modules([os.path.dirname(mod.__file__)]):
-                opts.append({'insertion_text':match, 'menu_text':match , 'extra_menu_info': mod.__name__})
+                opts.append(
+                    {'insertion_text': match, 'menu_text': match, 'extra_menu_info': mod.__name__})
 
         return opts
 
@@ -162,7 +165,8 @@ class TemplateInspector(object):
             for path, _ in finder.list([]):
                 if re.compile(ext, re.IGNORECASE).match(path) \
                         and path.startswith(self.pattern):
-                    matches.append(dict(insertion_text=path, extra_menu_info=''))
+                    matches.append(
+                        dict(insertion_text=path, extra_menu_info=''))
 
         return matches
 
@@ -182,7 +186,7 @@ class TemplateInspector(object):
                             _, ext = os.path.splitext(myfile)
                             if ext in TEMPLATE_EXTS:
                                 matches.append({
-                                   'insertion_text': os.path.join(root, myfile).replace(
+                                    'insertion_text': os.path.join(root, myfile).replace(
                                         mydir, ''),
                                     'extra_menu_info': 'found in %s' % mydir
                                 })
@@ -208,7 +212,7 @@ class TemplateInspector(object):
             match = rexp.match(line)
             if match:
                 try:
-                    base = get_template(str( match.groups()[0] ))
+                    base = get_template(str(match.groups()[0]))
                 except TemplateDoesNotExist as e:
                     return []
 
@@ -240,20 +244,20 @@ class TemplateInspector(object):
                 logging.debug("parent_name")
                 logging.debug(tpl.nodelist[0].parent_name)
                 parent_template = str(tpl.nodelist[0].parent_name).replace(
-                        '"','').replace("''", '')
+                    '"', '').replace("''", '')
                 try:
                     parent_tpl = get_template(parent_template)
-                    blocks += _get_blocks(parent_tpl )
+                    blocks += _get_blocks(parent_tpl)
                 except TemplateDoesNotExist:
                     logging.info("get_template:TemplateDoesNotExist - '%s'" %
-                            parent_template)
+                                 parent_template)
 
             return blocks
 
         matches = _get_blocks(base)
 
-        return [{'insertion_text': name, 'menu_text': name, 'extra_menu_info': match} \
-                    for _, name, match in matches if name.startswith(self.pattern)]
+        return [{'insertion_text': name, 'menu_text': name, 'extra_menu_info': match}
+                for _, name, match in matches if name.startswith(self.pattern)]
 
     def _urls(self):
         """
@@ -269,9 +273,10 @@ class TemplateInspector(object):
             for entry in urllist:
                 if hasattr(entry, 'name') and entry.name:
                     matches.append(dict(
-                        insertion_text=entry.name,
-                        extra_menu_info=entry.regex.pattern,
-                        menu_text=parent and parent.urlconf_name or '')
+                        insertion_text=str(entry.name),
+                        extra_menu_info=str(entry.regex.pattern),
+                        menu_text=str(entry.name),
+                        detailed_info=parent and str(parent.urlconf_name ) or '')
                     )
                 if hasattr(entry, 'url_patterns'):
                     get_urls(entry.url_patterns, entry)
@@ -293,12 +298,11 @@ class TemplateInspector(object):
         """ return completion dict """
         self.lineno, self.colno = lineno or self.lineno, colno or self.colno
 
-
         logging.debug("returning: %s" % self.get_line())
         func = LineParser(self.get_line(), self.colno).get_type()
 
         if func:
-            comps =  getattr(self,func)()
+            comps = getattr(self, func)()
             logging.debug("returning: %s" % comps)
             return comps
         return []
@@ -322,14 +326,13 @@ class TemplateInspector(object):
             # unusual case for empty files
             if self.lineno == 0:
                 line = self.buff[self.lineno]
-            line = self.buff[self.lineno -1]
+            line = self.buff[self.lineno - 1]
         except IndexError:
             line = ''
 
         logging.debug('current_line: %s' % line)
 
         return line
-
 
     def in_django_tag(self):
         lp = LineParser(self.get_line(), self.colno)
@@ -415,7 +418,7 @@ class LineParser(object):
     is_block.value = '_blocks'
 
     def get_type(self):
-        for func in [f for f in dir(self) if  'is_' in f]:
+        for func in [f for f in dir(self) if 'is_' in f]:
             if getattr(self, func)():
                 return getattr(self, func).value
 
