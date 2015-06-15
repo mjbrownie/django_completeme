@@ -10,9 +10,7 @@ An omnicomplete tailored to django templates "tags/variables/filters/templates"
 
 Screenshots:
 
-    block: https://github.com/mjbrownie/vim-htmldjango_omnicomplete/raw/master/examples/block_eample.png
-    url: https://github.com/mjbrownie/vim-htmldjango_omnicomplete/raw/master/examples/url_example.png
-    extends: https://github.com/mjbrownie/vim-htmldjango_omnicomplete/blob/master/examples/extends_example.png
+![](https://raw.githubusercontent.com/mjbrownie/media/master/django_completeme.gif)
 
 Eg.
 
