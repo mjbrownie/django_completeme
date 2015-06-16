@@ -219,7 +219,7 @@ class TemplateInspector(object):
         if not base:
             return []
 
-        def _get_blocks(tpl, menu_prefix=''):
+        def _get_blocks(tpl, menu_prefix='', add_name = True):
             """
             recursive worker function
             """
@@ -229,16 +229,22 @@ class TemplateInspector(object):
             tpl = getattr(tpl, 'name', None) and tpl or tpl.template
 
             if tpl.name in templates and isinstance(tpl, Template):
-                print "cyclic extends detected!"
+                logging.info("cyclic extends detected!")
                 return []
             else:
                 templates.append(tpl.name)
 
-            blocks = [(block, block.name, menu_prefix + tpl.name)
+            if menu_prefix == '' and isinstance(tpl, Template):
+                menu_prefix = "%s > " % tpl.name
+
+            blocks = [(block, block.name, menu_prefix)
                       for block in tpl.nodelist if isinstance(block, BlockNode)]
 
-            for block, _, name in blocks:
-                blocks += _get_blocks(block, '%s%s > ' % (menu_prefix, name))
+            for block, name, _ in blocks:
+                if add_name:
+                    blocks += _get_blocks(block, '%s%s > ' % (menu_prefix, name))
+                else:
+                    blocks += _get_blocks(block, '%s' % (menu_prefix))
 
             if len(tpl.nodelist) > 0 and isinstance(tpl.nodelist[0], ExtendsNode):
                 logging.debug("parent_name")
@@ -252,9 +258,25 @@ class TemplateInspector(object):
                     logging.info("get_template:TemplateDoesNotExist - '%s'" %
                                  parent_template)
 
+            for node in tpl.nodelist:
+                if not isinstance(node, BlockNode) and not isinstance(node,
+                        ExtendsNode):
+                    try:
+                        blocks += _get_blocks(node, menu_prefix, add_name=False)
+                    except AttributeError:
+                        logging.info("node %s: no nodelist" % node)
+
             return blocks
 
-        matches = _get_blocks(base)
+        full_matches = _get_blocks(base)
+
+        names = []
+        matches = []
+        # dedup matches TODO might be a better way of picking matches
+        for match in full_matches:
+            if not match[0] in names:
+                matches.append(match)
+                names.append(match[0])
 
         return [{'insertion_text': name, 'menu_text': name, 'extra_menu_info': match}
                 for _, name, match in matches if name.startswith(self.pattern)]
