@@ -8,9 +8,36 @@ https://github.com/mjbrownie/vim-htmldjango_omnicomplete
 
 An omnicomplete tailored to django templates "tags/variables/filters/templates"
 
-Screenshots:
+##Screenshots:
 
 ![](https://raw.githubusercontent.com/mjbrownie/media/master/django_completeme.gif)
+
+## Installation
+
+Currently I am operating a fork of the you complete me daemon (ycmd).
+
+This completion engine is designed for the YouCompleteMe. Please follow
+instructions here *first*.
+
+https://github.com/Valloric/YouCompleteMe#Installation
+
+    cd ~/.vim/bundle/youcompleteme/third_party/ycmd
+    git remote add mjbrownie https://github.com/mjbrownie/ycmd.git
+    git checkout --track -b mjbrownie mjbrownie/master
+    git submodule init
+    git submodule update
+    git submodule foreach git pull origin master
+    git submodule foreach git submodule init
+    git submodule foreach git submodule update
+
+Once Completed the directory structure should be as follows.
+
+    ~/.vim/bundle/youcompleteme <--vim plugin (https://github.com/Valloric/YouCompleteMe.git)
+    ~/.vim/bundle/youcompleteme/third_party/ycmd <-- backend (https://github.com/mjbrownie/ycmd.git)
+    ~/.vim/bundle/youcompleteme/third_party/ycmd/third_party/django_completeme <-- djangoplugin (https://github.com/mjbrownie/django_completeme.git)
+
+
+##Features
 
 Eg.
 
