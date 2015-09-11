@@ -21,6 +21,9 @@ instructions here *first*.
 
 https://github.com/Valloric/YouCompleteMe#Installation
 
+Once you are comfortable with youcompleteme working on your system (eg. with
+python jedi), swap the daemon remote with my fork as follows.
+
     cd ~/.vim/bundle/youcompleteme/third_party/ycmd
     git remote add mjbrownie https://github.com/mjbrownie/ycmd.git
     git checkout --track -b mjbrownie mjbrownie/master
