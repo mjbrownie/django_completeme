@@ -1,5 +1,7 @@
 # Django Template Editor Competion Engine
 
+[![Join the chat at https://gitter.im/mjbrownie/django_completeme](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mjbrownie/django_completeme?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This is a rerwite of the htmldjango-omnicomplete vim plugin I released a while
 back. I've set it up an app rather than as a vim plugin so vim no longer has to
 have the django python code running inside it.
