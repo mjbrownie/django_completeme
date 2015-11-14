@@ -40,6 +40,8 @@ Once Completed the directory structure should be as follows.
     ~/.vim/bundle/youcompleteme/third_party/ycmd/third_party/django_completeme <-- djangoplugin (https://github.com/mjbrownie/django_completeme.git)
 
 
+
+
 ##Features
 
 Eg.

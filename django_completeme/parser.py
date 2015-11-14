@@ -175,7 +175,11 @@ class TemplateInspector(object):
         matching any completions {% include '<here>' %}
         or  {% extends '<here>' %}
         """
-        dirs = mysettings.TEMPLATE_DIRS + app_template_dirs
+        dirs = getattr(mysettings, "TEMPLATE_DIRS ", ()) + app_template_dirs
+        if hasattr(mysettings, "TEMPLATES"):
+            for d in [e["DIRS"] for e in mysettings.TEMPLATES]:
+                dirs += tuple(d)
+
         matches = []
         for mydir in dirs:
             mydir = mydir + ('/' if not mydir.endswith('/') else '')
