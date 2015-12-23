@@ -151,9 +151,9 @@ class TemplateInspector(object):
 
         # checking for <img <style <script tags to further filter results
         if 'script' in line:
-            ext = r".*\.js$"
+            ext = r".*\.(js|jsx)$"
         elif 'style' in line:
-            ext = r".*\.css$"
+            ext = r".*\.(css|sass|scss|less)$"
         elif 'img' in line:
             ext = r".*\.(gif|jpg|jpeg|png)$"
         else:
