@@ -12,7 +12,12 @@ try:
     from django.template import get_library
 except ImportError:
     #for django 1.8+
-    from django.template.base import get_library
+    try:
+        from django.template.base import get_library
+    except:
+        from django.template.backends.django import get_installed_libraries
+        def get_library(libname):
+            return get_installed_libraries()[libname]
 
 from django.template.loaders import filesystem, app_directories
 #Later versions of django seem to be fussy about get_library paths.
@@ -23,6 +28,7 @@ except ImportError:
         from django.template.base import import_library
     except ImportError:
         import_library = get_library
+
 
 
 try:
