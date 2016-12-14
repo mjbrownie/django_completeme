@@ -9,41 +9,51 @@ import logging
 
 logging.debug("htmldjango:parser_init")
 
-if 'VIRTUAL_ENV' in os.environ:
-    project_base_dir = os.environ['VIRTUAL_ENV']
-    sys.path.insert(0, project_base_dir)
-    activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
-    execfile(activate_this, dict(__file__=activate_this))
-
-# Old school project assumptions. Note This assumes pwd is project dir
-if os.path.exists('settings.py'):
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-else:
-    # look for django 1.4 style settings eg /<project>/<project>/settings.py
-    # created by a django_admin.py startproject
-    cur_dir = os.path.join(os.getcwd().split('/').pop())
-    if os.path.exists(os.path.join(cur_dir, 'settings.py')):
-        os.environ['DJANGO_SETTINGS_MODULE'] = '%s.settings' % cur_dir
-    else:
-        pass
-
-
 logging.info("htmldjango: settings_module=%s" %
              os.environ['DJANGO_SETTINGS_MODULE'])
 
-sys.path.insert(0, os.getcwd())
+def load_settings():
+    logging.info("load_settings")
+    if 'VIRTUAL_ENV' in os.environ:
+        project_base_dir = os.environ['VIRTUAL_ENV']
+        sys.path.insert(0, project_base_dir)
+        activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
+        execfile(activate_this, dict(__file__=activate_this))
 
-if os.environ.get('DJANGO_CONFIGURATION'):
-    import configurations.importer
-    configurations.importer.install()
+    # Old school project assumptions. Note This assumes pwd is project dir
+    if os.path.exists('settings.py'):
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+    else:
+        # look for django 1.4 style settings eg /<project>/<project>/settings.py
+        # created by a django_admin.py startproject
+        cur_dir = os.path.join(os.getcwd().split('/').pop())
+        if os.path.exists(os.path.join(cur_dir, 'settings.py')):
+            os.environ['DJANGO_SETTINGS_MODULE'] = '%s.settings' % cur_dir
+        else:
+            pass
+
+
+
+    sys.path.insert(0, os.getcwd())
+
+    if os.environ.get('DJANGO_CONFIGURATION'):
+        try:
+            import configurations.importer
+            configurations.importer.install()
+        except ImportError:
+            pass
 
 # Setup Django (required for >= 1.7).
-import django
-if hasattr(django, 'setup'):
-    django.setup()
+    import django
+    if hasattr(django, 'setup'):
+        django.setup()
 
-logging.debug("htmldjango: config_complete")
+    logging.debug("htmldjango: config_complete")
 
+import sys
+
+if not any(['manage.py' in a for a in sys.argv]):
+    load_settings()
 
 from django.template import Template, TemplateDoesNotExist
 
@@ -65,6 +75,7 @@ TEMPLATE_EXTS = ['.html', '.txt', '.htm', '.haml']
 logging.debug("htmldjango: import complete")
 
 
+# @decallmethods(logthis(logging.DEBUG))
 class TemplateInspector(object):
 
     """
@@ -83,6 +94,7 @@ class TemplateInspector(object):
     def __init__(self, filename, lineno=1, colno=0, buff=None):
         self.filename, self.lineno, self.colno = filename, lineno, colno
         self.load_template(filename)
+        logging.info("TI.__init__")
 
         if buff:
             self.buff = buff.split('\n')
@@ -96,6 +108,7 @@ class TemplateInspector(object):
         TODO This is a pretty messy import from the original omnicomplete
         plugin
         """
+        logging.info("htmldjango: _tags_or_filters")
 
         def _get_doc(doc, name):
             """ get doc cleans __doc__ extra_menu_info in the vim window at top """
@@ -127,6 +140,7 @@ class TemplateInspector(object):
         """
         matches for {% load %}
         """
+        logging.info("htmldjango: _loads")
         opts = []
         for module in get_templatetags_modules():
             mod = __import__(module, fromlist=['foo'])
@@ -137,14 +151,17 @@ class TemplateInspector(object):
         return opts
 
     def _tags(self):
+        logging.info("htmldjango: _tags")
         """ matching any completions {% <here> %}"""
         return self._tags_or_filters('tags')
 
     def _filters(self):
+        logging.info("htmldjango: _filters")
         """ matching any completions {% varname|<here> %}"""
         return self._tags_or_filters('filters')
 
     def _staticfiles(self):
+        logging.info("htmldjango: _tags")
         """ matching any completions {% static '<here>' %}"""
 
         line = self.get_line()
@@ -156,6 +173,8 @@ class TemplateInspector(object):
             ext = r".*\.(css|sass|scss|less)$"
         elif 'img' in line:
             ext = r".*\.(gif|jpg|jpeg|png)$"
+        elif 'coffee' in line:
+            ext = r".*\.coffee$"
         else:
             ext = r'.*'
 
@@ -413,7 +432,9 @@ class LineParser(object):
     def is_staticfile(self):
         if self.in_a_tag():
             match = self.btagexp.match(self.before)
-            return match.groups()[0] == 'static'
+            return match.groups()[0] in ['static',
+                    'js', 'css', 'coffee',
+                    'coffeescript']
     is_staticfile.value = '_staticfiles'
 
     def is_template(self):
