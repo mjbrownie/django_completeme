@@ -10,13 +10,13 @@ https://github.com/mjbrownie/vim-htmldjango_omnicomplete
 
 An omnicomplete tailored to django templates "tags/variables/filters/templates"
 
-##Screenshots:
+## Screenshots:
 
 ![](https://raw.githubusercontent.com/mjbrownie/media/master/django_completeme.gif)
 
-##Installation
+## Installation
 
-##Easy method using vim plugged.
+## Easy method using vim plugged.
 
 You can use my fork of valloric/YouCompleteMe (up to date / ahead with master as of writing).
 Note I'm not looking to merge with the main repository unless there is a lot of demand for me to do so.
@@ -41,7 +41,7 @@ Note I'm not looking to merge with the main repository unless there is a lot of 
 This completion engine is designed for the YouCompleteMe. Please follow
 instructions here *first*.
 
-###Manual Installation
+### Manual Installation
 
 The old school but explicit way. 
 
@@ -66,7 +66,7 @@ Once Completed the directory structure should be as follows.
     ~/.vim/bundle/youcompleteme/third_party/ycmd/third_party/django_completeme <-- djangoplugin (https://github.com/mjbrownie/django_completeme.git)
 
 
-##Features
+## Features
 
 Eg.
 
@@ -117,7 +117,7 @@ Eg.
     Where possible info panels show the functions __doc__. Most of the
     internal ones are decent.
 
-##Limited Jinja Support.
+## Limited Jinja Support.
 
     I've added some jinja support for {% include '' %} {% extend "" %} and {% static "" %}
 
