@@ -19,7 +19,7 @@ An omnicomplete tailored to django templates "tags/variables/filters/templates"
 ## Easy method using vim plugged.
 
 You can use my fork of valloric/YouCompleteMe (up to date / ahead with master as of writing).
-Note I'm not looking to merge with the main repository unless there is a lot of demand for me to do so.
+Note I'm not looking to offer a pull request to main repository unless there is a lot of demand for me to do so.
 
 
     function! BuildYCM(info)
