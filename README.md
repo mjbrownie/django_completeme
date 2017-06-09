@@ -14,12 +14,36 @@ An omnicomplete tailored to django templates "tags/variables/filters/templates"
 
 ![](https://raw.githubusercontent.com/mjbrownie/media/master/django_completeme.gif)
 
-## Installation
+##Installation
 
-Currently I am operating a fork of the you complete me daemon (ycmd).
+##Easy method using vim plugged.
+
+You can use my fork of valloric/YouCompleteMe (up to date / ahead with master as of writing).
+Note I'm not looking to merge with the main repository unless there is a lot of demand for me to do so.
+
+
+    function! BuildYCM(info)
+      " info is a dictionary with 3 fields
+      " - name:   name of the plugin
+      " - status: 'installed', 'updated', or 'unchanged'
+      " - force:  set on PlugInstall! or PlugUpdate!
+      if a:info.status == 'installed' || a:info.force
+        !./install.py
+      endif
+    endfunction
+
+    call plug#begin()
+    ...
+    Plug 'mjbrownie/YouCompleteMe', { 'do': function('BuildYCM') }
+    ...
+    call plug#end()
 
 This completion engine is designed for the YouCompleteMe. Please follow
 instructions here *first*.
+
+###Manual Installation
+
+The old school but explicit way. 
 
 https://github.com/Valloric/YouCompleteMe#Installation
 
@@ -40,8 +64,6 @@ Once Completed the directory structure should be as follows.
     ~/.vim/bundle/youcompleteme <--vim plugin (https://github.com/Valloric/YouCompleteMe.git)
     ~/.vim/bundle/youcompleteme/third_party/ycmd <-- backend (https://github.com/mjbrownie/ycmd.git)
     ~/.vim/bundle/youcompleteme/third_party/ycmd/third_party/django_completeme <-- djangoplugin (https://github.com/mjbrownie/django_completeme.git)
-
-
 
 
 ##Features
@@ -94,3 +116,8 @@ Eg.
 
     Where possible info panels show the functions __doc__. Most of the
     internal ones are decent.
+
+##Limited Jinja Support.
+
+    I've added some jinja support for {% include '' %} {% extend "" %} and {% static "" %}
+
