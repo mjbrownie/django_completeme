@@ -117,4 +117,29 @@ Eg.
 ## Limited Jinja Support.
 
     I've added some jinja support for {% include '' %} {% extend "" %} and {% static "" %}
+    
+## TESTING
+
+    django needs to be in sys.path along with DJANGO_SETTINGS_MODULE in your
+    environment.
+
+    To test...
+
+    :python import django
+
+    should not result in an error
+
+    :python from django.conf import settings; print settings.INSTALLED_APPS
+    :python from django.conf import settings; print settings.TEMPLATE_DIRS
+
+    should show the apps template dirs you need
+
+    I've only tested this on a mac with vim 7.3 and django 1.4
+
+
+    If stuff like django python/jedi is working fine but the template completion isn't try
+    
+    :YcmDebugInfo
+    
+    Useful error messages related to failed imports will appear
 
