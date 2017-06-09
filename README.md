@@ -38,9 +38,6 @@ Note I'm not looking to merge with the main repository unless there is a lot of 
     ...
     call plug#end()
 
-This completion engine is designed for the YouCompleteMe. Please follow
-instructions here *first*.
-
 ### Manual Installation
 
 The old school but explicit way. 
