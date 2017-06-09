@@ -70,7 +70,7 @@ logging.debug("htmldjango: compat")
 from django_completeme.compat import app_template_dirs, \
     get_templatetags_modules, get_library, import_library
 
-TEMPLATE_EXTS = ['.html', '.txt', '.htm', '.haml']
+TEMPLATE_EXTS = ['.html', '.txt', '.htm', '.haml', '.jinja']
 
 logging.debug("htmldjango: import complete")
 
