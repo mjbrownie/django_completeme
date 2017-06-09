@@ -141,5 +141,7 @@ Eg.
     
     :YcmDebugInfo
     
+    And tail -f the logs specified.
+    
     Useful error messages related to failed imports will appear
 
