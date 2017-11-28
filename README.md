@@ -37,6 +37,14 @@ Note I'm not looking to offer a pull request to main repository unless there is 
     Plug 'mjbrownie/YouCompleteMe', { 'do': function('BuildYCM') }
     ...
     call plug#end()
+    
+also you'll need to set your DJANGO_SETTINGS_MODULE eg from the command line.
+
+(django-env) ~/project/ % DJANGO_SETTINGS_MODULE=project.settings vi <file>
+
+and set your desired python3 exe.
+
+let g:python3_host_prog='/your/venv/bin/python3'
 
 ### Manual Installation
 
