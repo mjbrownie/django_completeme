@@ -1,8 +1,7 @@
+from __future__ import unicode_literals
 """"
 Compatibility functions to attempt to stay useful for most django versions
 (1.4 -> 18+)
-
-
 """
 import os, sys
 import django
@@ -17,7 +16,7 @@ except ImportError:
     except:
         from django.template.backends.django import get_installed_libraries
         def get_library(libname):
-            return get_installed_libraries()[libname]
+            return get_installed_libraries().get(libname, None)
 
 from django.template.loaders import filesystem, app_directories
 #Later versions of django seem to be fussy about get_library paths.

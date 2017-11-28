@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 """
 competion Template Inspector
 """
@@ -12,48 +13,14 @@ logging.debug("htmldjango:parser_init")
 logging.info("htmldjango: settings_module=%s" %
              os.environ['DJANGO_SETTINGS_MODULE'])
 
-def load_settings():
-    logging.info("load_settings")
-    if 'VIRTUAL_ENV' in os.environ:
-        project_base_dir = os.environ['VIRTUAL_ENV']
-        sys.path.insert(0, project_base_dir)
-        activate_this = os.path.join(project_base_dir, 'bin/activate_this.py')
-        execfile(activate_this, dict(__file__=activate_this))
-
-    # Old school project assumptions. Note This assumes pwd is project dir
-    if os.path.exists('settings.py'):
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-    else:
-        # look for django 1.4 style settings eg /<project>/<project>/settings.py
-        # created by a django_admin.py startproject
-        cur_dir = os.path.join(os.getcwd().split('/').pop())
-        if os.path.exists(os.path.join(cur_dir, 'settings.py')):
-            os.environ['DJANGO_SETTINGS_MODULE'] = '%s.settings' % cur_dir
-        else:
-            pass
-
-
-
-    sys.path.insert(0, os.getcwd())
-
-    if os.environ.get('DJANGO_CONFIGURATION'):
-        try:
-            import configurations.importer
-            configurations.importer.install()
-        except ImportError:
-            pass
-
 # Setup Django (required for >= 1.7).
-    import django
-    if hasattr(django, 'setup'):
-        django.setup()
+import django
+if hasattr(django, 'setup'):
+    django.setup()
 
-    logging.debug("htmldjango: config_complete")
+logging.debug("htmldjango: config_complete")
 
 import sys
-
-if not any(['manage.py' in a for a in sys.argv]):
-    load_settings()
 
 from django.template import Template, TemplateDoesNotExist
 
@@ -118,6 +85,17 @@ class TemplateInspector(object):
 
         def _get_opt_dict(lib, tpl, libname=''):
             """ not sure what this does"""
+
+            # Post 1.10 is passing strings instead of library objects here.
+
+            if lib is None:
+                return []
+
+
+            if isinstance(lib, str):
+                import importlib
+                lib = importlib.import_module(lib).register
+
             opts = getattr(lib, tpl)
             return [{'insertion_text': myfile, 'detailed_info': _get_doc(opts[myfile].__doc__, myfile),
                      'menu_text':myfile, 'extra_menu_info': libname} for myfile in opts.keys()]
@@ -317,9 +295,16 @@ class TemplateInspector(object):
         def get_urls(urllist, parent=None):
             for entry in urllist:
                 if hasattr(entry, 'name') and entry.name:
+
+                    # 2.0 has got rid of regex
+                    try:
+                        extra_menu_info = entry.pattern.describe()
+                    except AttributeError:
+                        extra_menu_info = getattr(entry, 'regex', '(None)')
+
                     matches.append(dict(
                         insertion_text=str(entry.name),
-                        extra_menu_info=str(entry.regex.pattern),
+                        extra_menu_info=str(extra_menu_info),
                         menu_text=str(entry.name),
                         detailed_info=parent and str(parent.urlconf_name ) or '')
                     )
